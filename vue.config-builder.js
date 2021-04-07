@@ -1,5 +1,5 @@
-var webpack = require('webpack')
-var exec = require('child_process').execSync
+// var webpack = require('webpack')
+// var exec = require('child_process').execSync
 var path = require('path')
 
 module.exports = ({ appFlavour, appName, appLabel, version, theme, packageAlias, root = path.resolve('.'), env = process.env.NODE_ENV }) => {
@@ -34,12 +34,12 @@ module.exports = ({ appFlavour, appName, appLabel, version, theme, packageAlias,
     configureWebpack: {
       // other webpack options to merge in ...
       plugins: [
-        new webpack.DefinePlugin({
-          FLAVOUR: JSON.stringify(appFlavour),
-          WEBAPP: JSON.stringify(appLabel),
-          VERSION: JSON.stringify(version || ('' + exec('git describe --always --tags')).trim()),
-          BUILD_TIME: JSON.stringify((new Date()).toISOString()),
-        }),
+        // new webpack.DefinePlugin({
+        //   FLAVOUR: JSON.stringify(appFlavour),
+        //   WEBAPP: JSON.stringify(appLabel),
+        //   VERSION: JSON.stringify(version || ('' + exec('git describe --always --tags')).trim()),
+        //   BUILD_TIME: JSON.stringify((new Date()).toISOString()),
+        // }),
       ],
 
       optimization,
