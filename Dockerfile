@@ -6,9 +6,9 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json ./
-COPY package-lock.json ./
+COPY yarn.lock ./
 
-RUN npm install
+RUN yarn install
 
 COPY . ./
 
@@ -18,13 +18,13 @@ CMD ["npm", "start"]
 # build stage
 FROM run-stage as build-stage
 
-RUN npm run build
+RUN yarn build
 
 
 # deploy stage
 FROM nginx:stable-alpine as deploy-stage
 
-COPY --from=build-stage /app/build /usr/share/nginx/html
+COPY --from=build-stage /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
