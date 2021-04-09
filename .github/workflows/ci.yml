@@ -78,7 +78,7 @@ jobs:
           tar -C dist -czf $RELEASE $(dir dist)
 
       - name: Install lftp
-        run: apt-get install lftp -y
+        run: sudo apt-get install lftp -y
 
       - name: Upload tar.gz
         run: lftp sftp://${{ secrets.SOURCEFORGE_USERNAME }}:${{ secrets.SOURCEFORGE_PASSWORD }}@frs.sourceforge.net:/home/frs/project/cortezaproject/corteza-webapp-one -e "put $RELEASE; bye"
