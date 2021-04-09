@@ -63,7 +63,10 @@ jobs:
           CONTAINER=$(docker create build-image)
           docker cp $CONTAINER:/app/dist .
 
-      - name: Compress tar.gz
+      - name: Install lftp
+        run: sudo apt-get install lftp -y
+
+      - name: Compress and Upload tar.gz
         run: |
           if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]]
           then
@@ -76,12 +79,7 @@ jobs:
           fi
           RELEASE="corteza-webapp-one-$VERSION.tar.gz"
           tar -C dist -czf $RELEASE $(dir dist)
-
-      - name: Install lftp
-        run: sudo apt-get install lftp -y
-
-      - name: Upload tar.gz
-        run: lftp sftp://${{ secrets.SOURCEFORGE_USERNAME }}:${{ secrets.SOURCEFORGE_PASSWORD }}@frs.sourceforge.net:/home/frs/project/cortezaproject/corteza-webapp-one -e "put $RELEASE; bye"
+          lftp sftp://${{ secrets.SOURCEFORGE_USERNAME }}:${{ secrets.SOURCEFORGE_PASSWORD }}@frs.sourceforge.net:/home/frs/project/cortezaproject/corteza-webapp-one -e "put $RELEASE; bye"
 
       - name: Docker Logout
         run: docker logout
