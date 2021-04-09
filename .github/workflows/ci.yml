@@ -5,20 +5,16 @@ on:
     branches:
       - '**'
     tags:
-      - '20[0-9][0-9].3.*'
-      - '20[0-9][0-9].6.*'
-      - '20[0-9][0-9].9.*'
-      - '20[0-9][0-9].12.*'
+      - '202[0-9].3.*'
+      - '202[0-9].6.*'
+      - '202[0-9].9.*'
+      - '202[0-9].12.*'
   pull_request:
     branches:
-      - '20[0-9][0-9].3.x'
-      - '20[0-9][0-9].6.x'
-      - '20[0-9][0-9].9.x'
-      - '20[0-9][0-9].12.x'
-
-
-env:
-  DEFAULT_BRANCH: ${{ secrets.DEFAULT_BRANCH }}
+      - '202[0-9].3.x'
+      - '202[0-9].6.x'
+      - '202[0-9].9.x'
+      - '202[0-9].12.x'
 
 
 jobs:
@@ -48,7 +44,12 @@ jobs:
 
   tar:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == env.DEFAULT_BRANCH) }}
+    if: |
+      startsWith(github.ref, 'refs/tags/') ||
+        github.ref == 'refs/heads/2021.3.x' || github.ref == 'refs/heads/2021.6.x' ||
+        github.ref == 'refs/heads/2021.9.x' || github.ref == 'refs/heads/2021.12.x' ||
+        github.ref == 'refs/heads/2022.3.x' || github.ref == 'refs/heads/2022.6.x' ||
+        github.ref == 'refs/heads/2022.9.x' || github.ref == 'refs/heads/2022.12.x'
     needs:
       - test
     steps:
@@ -91,7 +92,12 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == env.DEFAULT_BRANCH) }}
+    if: |
+      startsWith(github.ref, 'refs/tags/') ||
+        github.ref == 'refs/heads/2021.3.x' || github.ref == 'refs/heads/2021.6.x' ||
+        github.ref == 'refs/heads/2021.9.x' || github.ref == 'refs/heads/2021.12.x' ||
+        github.ref == 'refs/heads/2022.3.x' || github.ref == 'refs/heads/2022.6.x' ||
+        github.ref == 'refs/heads/2022.9.x' || github.ref == 'refs/heads/2022.12.x'
     needs:
       - test
     steps:
