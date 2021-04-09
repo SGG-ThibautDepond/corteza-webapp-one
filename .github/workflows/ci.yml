@@ -52,6 +52,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Docker Login
+        run: docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Test Docker Image
+        run: docker build -t build-image --target build-stage .
+
+      - name: Copy Dist Folder
+        run: docker cp build-image:/app/dist .
+
       - name: Compress tar.gz
         run: |
           if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]]
@@ -71,6 +80,9 @@ jobs:
 
       - name: Upload tar.gz
         run: lftp sftp://${{ secrets.SOURCEFORGE_USERNAME }}:${{ secrets.SOURCEFORGE_PASSWORD }}@frs.sourceforge.net:/home/frs/project/cortezaproject/corteza-webapp-one -e "put $RELEASE; bye"
+
+      - name: Docker Logout
+        run: docker logout
 
 
   docker:
@@ -98,7 +110,7 @@ jobs:
             exit 1
           fi
           IMAGE="cortezaproject/corteza-webapp-one:$TAG"
-          docker docker build -t $IMAGE .
+          docker build -t $IMAGE .
           docker push $IMAGE
 
       - name: Docker Logout
