@@ -5,16 +5,13 @@ on:
     branches:
       - '**'
     tags:
-      - '202[0-9].3.*'
-      - '202[0-9].6.*'
-      - '202[0-9].9.*'
-      - '202[0-9].12.*'
+      - '20[0-9][0-9].3.*'
+      - '20[0-9][0-9].6.*'
+      - '20[0-9][0-9].9.*'
+      - '20[0-9][0-9].12.*'
   pull_request:
     branches:
-      - '202[0-9].3.x'
-      - '202[0-9].6.x'
-      - '202[0-9].9.x'
-      - '202[0-9].12.x'
+      - '**'
 
 
 jobs:
@@ -45,9 +42,19 @@ jobs:
   tar:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/test'
+    env:
+      APP_NAME: corteza-webapp-one
     needs:
       - test
     steps:
+
+      - name: Set ENV Variables
+        run: |
+          if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]] || [[ $GITHUB_REF =~ ^refs/heads/(.*)$ ]]; then
+            echo "VERSION=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+          else
+            exit 1
+          fi
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -59,37 +66,22 @@ jobs:
         run: docker build -t build-image --target build-stage .
 
       - name: Copy Dist Folder
-        run: |
-          CONTAINER=$(docker create build-image)
-          docker cp $CONTAINER:/app/dist .
+        run: docker cp $(docker create build-image):/app/dist .
 
-      - name: Install lftp
-        run: sudo apt-get install lftp -y
+      - name: Compress tar.gz
+        run: mkdir files; tar -C dist -czf files/${{ env.APP_NAME }}-${{ env.VERSION }}.tar.gz $(dir dist)
 
-      - name: Compress and Upload tar.gz
+      - name: Upload tar.gz
         run: |
-          if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]]
-          then
-            VERSION=${BASH_REMATCH[1]}
-          elif [[ $GITHUB_REF =~ ^refs/heads/(.*)$ ]]
-          then
-            VERSION=${BASH_REMATCH[1]}
-          else
-            exit 1
-          fi
-          RELEASE="corteza-webapp-one-$VERSION.tar.gz"
-          tar -C dist -czf $RELEASE $(dir dist)
-          mkdir files
-          mv $RELEASE files
           docker run --rm \
                      --env REMOTE_SERVER="sftp://frs.sourceforge.net" \
                      --env USERNAME="${{ secrets.SOURCEFORGE_USERNAME }}" \
                      --env PASSWORD="${{ secrets.SOURCEFORGE_PASSWORD }}" \
-                     --env REMOTE_PATH="/home/frs/project/cortezaproject/corteza-webapp-one" \
+                     --env REMOTE_PATH="/home/frs/project/cortezaproject/${{ env.APP_NAME }}" \
                      --env DEBUG=true \
                      --env DELETE_FILES=true \
                      --volume "$(pwd)/files":/files \
-                     toolhouse/lftp:latest /upload
+                     cortezaproject/lftp:latest /upload
 
       - name: Docker Logout
         run: docker logout
@@ -98,9 +90,19 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/test'
+    env:
+      IMAGE: cortezaproject/corteza-webapp-one
     needs:
       - test
     steps:
+
+      - name: Set ENV Variables
+        run: |
+          if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]] || [[ $GITHUB_REF =~ ^refs/heads/(.*)$ ]]; then
+            echo "TAG=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+          else
+            exit 1
+          fi
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -108,20 +110,11 @@ jobs:
       - name: Docker Login
         run: docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
-        run: |
-          if [[ $GITHUB_REF =~ ^refs/tags/(.*)$ ]]
-          then
-            TAG=${BASH_REMATCH[1]}
-          elif [[ $GITHUB_REF =~ ^refs/heads/(.*)$ ]]
-          then
-            TAG=${BASH_REMATCH[1]}
-          else
-            exit 1
-          fi
-          IMAGE="cortezaproject/corteza-webapp-one:$TAG"
-          docker build -t $IMAGE .
-          docker push $IMAGE
+      - name: Build Docker Image
+        run: docker build -t ${{ env.IMAGE }}:${{ env.TAG }} .
+
+      - name: Push Docker Image
+        run: docker push ${{ env.IMAGE }}:${{ env.TAG }}
 
       - name: Docker Logout
         run: docker logout
