@@ -79,7 +79,17 @@ jobs:
           fi
           RELEASE="corteza-webapp-one-$VERSION.tar.gz"
           tar -C dist -czf $RELEASE $(dir dist)
-          lftp sftp://${{ secrets.SOURCEFORGE_USERNAME }}:${{ secrets.SOURCEFORGE_PASSWORD }}@frs.sourceforge.net:/home/frs/project/cortezaproject/corteza-webapp-one -e "put $RELEASE; bye"
+          mkdir files
+          mv $RELEASE files
+          docker run --rm \
+                     --env REMOTE_SERVER="sftp://frs.sourceforge.net" \
+                     --env USERNAME="${{ secrets.SOURCEFORGE_USERNAME }}" \
+                     --env PASSWORD="${{ secrets.SOURCEFORGE_PASSWORD }}" \
+                     --env REMOTE_PATH="/home/frs/project/cortezaproject/corteza-webapp-one" \
+                     --env DEBUG=true \
+                     --env DELETE_FILES=true \
+                     --volume "./files":/files \
+                     toolhouse/lftp:latest /upload
 
       - name: Docker Logout
         run: docker logout
