@@ -44,7 +44,7 @@ jobs:
 
   tar:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || github.ref == secrets.DEFAULT_BRANCH }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == secrets.DEFAULT_BRANCH) }}
     needs:
       - test
     steps:
@@ -87,7 +87,7 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || github.ref == secrets.DEFAULT_BRANCH }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == secrets.DEFAULT_BRANCH) }}
     needs:
       - test
     steps:
